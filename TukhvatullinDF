@@ -1,0 +1,85 @@
+select count(*)
+from "customer"
+
+select count(*)
+from "transaction"
+		
+1 Вывести распределение (количество) клиентов по сферам деятельности, отсортировав результат по убыванию количества
+select job_industry_category, Count(customer_id)
+from customer c
+group by job_industry_category
+order by Count(customer_id) DESC
+
+
+2 Найти сумму транзакций за каждый месяц по сферам деятельности, отсортировав по месяцам и по сфере деятельности.
+select job_industry_category,Extract(month from transaction_date) as month, SUM(standard_cost)
+from "transaction" t 
+group by job_industry_category, 
+order by Count(customer_id) DESC
+
+
+3 Вывести количество онлайн-заказов для всех брендов в рамках подтвержденных заказов клиентов из сферы IT
+select brand, count(transaction_id)
+from "transaction" tr
+where order_status = 'Approved' 
+		and customer_id in (
+		select customer_id
+		from customer c
+		where job_industry_category = 'IT'
+		)
+group by brand
+order by count(transaction_id) DESC
+		
+		
+4 Найти по всем клиентам сумму всех транзакций (list_price), максимум, минимум и количество транзакций, отсортировав результат по убыванию суммы транзакций и количества клиентов.
+Выполните двумя способами: используя только group by и используя только оконные функции. Сравните результат
+select customer_id, SUM(list_price), MAX(list_price), MIN(list_price), COUNT(transaction_id)
+from "transaction" t
+group by customer_id
+order by SUM(list_price) DESC, COUNT(transaction_id) DESC
+
+select customer_id 
+, SUM(list_price) over(partition by customer_id)
+, MAX(list_price) over(partition by customer_id)
+, MIN(list_price) over(partition by customer_id)
+, COUNT(transaction_id) over(partition by customer_id)
+from "transaction" t
+order by SUM(list_price) over(partition by customer_id) DESC, COUNT(transaction_id) over(partition by customer_id) DESC
+
+
+
+5 Найти имена и фамилии клиентов с минимальной/максимальной суммой транзакций за весь период (сумма транзакций не может быть null).
+Напишите отдельные запросы для минимальной и максимальной суммы
+5.1 Клиент с минимальной суммой тразакций:
+select first_name, last_name
+from customer c
+where customer_id in (
+		select customer_id
+		from "transaction" t
+		group by customer_id
+		order by SUM(list_price) asc
+		limit 1
+)
+
+5.2 Клиент с макасимальной суммой тразакций:
+select first_name, last_name
+from customer c
+where customer_id in (
+		select customer_id
+		from "transaction" t
+		group by customer_id
+		order by SUM(list_price) desc
+		limit 1
+)
+
+
+6 Вывести только самые первые транзакции клиентов. Решить с помощью оконных функций.
+select customer_id 
+, MIN(transaction_date) over(partition by customer_id order by transaction_date::date asc) as min_date
+, transaction_id
+, row_number() over(partition by customer_id)
+from "transaction" t
+
+
+
+7 Вывести имена, фамилии и профессии клиентов, между транзакциями которых был максимальный интервал (интервал вычисляется в днях)
