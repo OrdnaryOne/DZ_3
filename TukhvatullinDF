@@ -12,10 +12,12 @@ order by Count(customer_id) DESC
 
 
 2 Найти сумму транзакций за каждый месяц по сферам деятельности, отсортировав по месяцам и по сфере деятельности.
-select job_industry_category,Extract(month from transaction_date) as month, SUM(standard_cost)
-from "transaction" t 
-group by job_industry_category, 
-order by Count(customer_id) DESC
+select Extract(month from transaction_date::date) as month, SUM(standard_cost), job_industry_category
+from transaction
+left join customer
+on  transaction.customer_id = customer.customer_id
+group by month, job_industry_category
+order by job_industry_category asc, SUM(standard_cost) asc
 
 
 3 Вывести количество онлайн-заказов для всех брендов в рамках подтвержденных заказов клиентов из сферы IT
