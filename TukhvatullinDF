@@ -76,12 +76,6 @@ where customer_id in (
 
 
 6 Вывести только самые первые транзакции клиентов. Решить с помощью оконных функций.
-select customer_id 
-, MIN(transaction_date) over(partition by customer_id order by transaction_date::date asc) as min_date
-, transaction_id
-, row_number() over(partition by customer_id)
-from "transaction" t
-
 
 
 7 Вывести имена, фамилии и профессии клиентов, между транзакциями которых был максимальный интервал (интервал вычисляется в днях)
